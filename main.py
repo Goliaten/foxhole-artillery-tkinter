@@ -4,7 +4,7 @@ import math
 import cmath
 import os
 
-# TODO:
+# TODO::
 # in map initialise, map name, make it cross platform
 # allos user to write fractions, and negatives
 # prettify the calculator / styles
@@ -39,11 +39,11 @@ def get_wind_offset(string_var):
         return 0
         
 class Calculator:
-    def __init__(self, parent):
+    def __init__(self, parent, column, row):
         
         #-- defining and configuring calculator frame --
         frame = ttk.Frame(parent)
-        frame.grid(column=0, row=0, sticky=(W, E))
+        frame.grid(column=column, row=row, sticky=(W, E))
         frame.columnconfigure(0, weight=1)
         frame.columnconfigure(1, weight=1)
         frame.rowconfigure(0, weight=1)
@@ -64,19 +64,18 @@ class Calculator:
         self.wind_str_combo['values'] = [0, 1, 2, 3, 4 ,5]
         self.wind_str_combo.state(['readonly'])
         self.wind_str_combo.current(0)
-        # also make combo for type of weapon for correct wind offset
+        
         self.arty_type_label = ttk.Label(frame, text="Artillery type")
         self.arty_type_combo = ttk.Combobox(frame, textvariable=wind_offset_var)
         self.arty_type_combo['values'] = list(artillery_types.keys())
         self.arty_type_combo.state(['readonly'])
         self.arty_type_combo.current(0)
+        
         self.submit = ttk.Button(frame, text="calculate", command=self.calculate)
         self.final_azi_label = ttk.Label(frame, textvariable=final_azi)
         self.final_dist_label = ttk.Label(frame, textvariable=final_dist)
         
-        
-        
-    def create(self, column, row):
+    def create(self):
         #-- positioning widgets --
         self.azim_label.grid(column=0, row=0, sticky=(E))
         self.azim_entry.grid(column=1, row=0, sticky=(W))
@@ -91,7 +90,6 @@ class Calculator:
         self.submit.grid(row=5, columnspan=2)
         self.final_azi_label.grid(column=0, row=6, sticky=(E))
         self.final_dist_label.grid(column=1, row=6, sticky=(W))
-        
         
     def calculate(self, *args):
         
@@ -148,6 +146,7 @@ class Main:
         frame.rowconfigure(10, weight=1)
         frame.rowconfigure(20, weight=1)
         frame.rowconfigure(30, weight=9)
+        self.frame = frame
         
         #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=10, row=10, sticky=(N, W, E, S))
         #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=10, row=20, sticky=(N, W, E, S))
@@ -159,14 +158,29 @@ class Main:
         #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=30, row=20, sticky=(N, W, E, S))
         #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=30, row=30, sticky=(N, W, E, S))
         
-        self.calculator = Calculator(frame)
+        self.calculator = Calculator(frame, 10, 30)
         self.map = Map(frame)
     
     def startup(self):
         
-        self.calculator.create(10, 20)
+        self.calculator.create()
+        self.create_title(self.frame, title="artillery calculator")
+        self.create_settings(self.frame)
         
-        pass
+    def create_title(self, frame, column=10, row=10, title="",):
+        title = ttk.Label(frame, text=title)
+        title.grid(column=column, row=row, columnspan=2)
+    
+    #later separate this to other function
+    def create_settings(self, frame, column=30, row=10):
+        
+        image_name= os.path.dirname(os.path.realpath(__file__)) + "\\assets\\cog.png"
+        image = PhotoImage(file=image_name)
+        image = image.subsample(12) # https://stackoverflow.com/questions/6582387/image-resize-under-photoimage
+        
+        image_label = ttk.Label(frame, image=image)
+        image_label.image = image
+        image_label.grid(column=column, row=row, sticky=(N,W,E,S))
 
 root = Tk()
 root.title("Artillery calculator")
