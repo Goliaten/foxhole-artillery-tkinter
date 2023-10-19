@@ -1,0 +1,29 @@
+Settings framework stored in settings_framework.json.
+Framework defines the structure of settings window/widgets, and structure of application settings.
+
+Each value without a special sign in front of it represents a singular setting. Syntax is as follows:
+
+setting_name: [setting_type, caption, default_value],
+
+setting_name - any string variable, it is a name, which will appear in the settings file
+setting_type - any entry from allowed_widgets special setting
+caption - string text, that will be displayed for user in settings window
+default_value - default value taken, if not set. Should be integer. In case of combobox, it points at index of the item in the combobox list.
+
+In order for more complex settings to be used, a special item settings are used. It starts with '_', and the rest is name of the setting it refferences. Value of these item settings is a 2d list, with inner lists containing item value, to be saved to settings, and item name, to be shown to the user. Syntax is as follows:
+
+_item_setting: [ [item_value, item_name], [item_2_value, item_2_name], ...],
+
+Currently, radiobutton, and combobox use the item settings. Checkbox doesn't need them.
+
+
+#------------------
+Startup of settings
+If settings and framework exist - load framework, Load settings, create widgets, while creating widgets set default variables.
+If settings dont exist, but framework does - load framework, save default settings, create widgets, fill with default variables(or variables used to save settings)(yes, there is difference. Former uses data from framework, other from data saved to settings... wait, its the same)
+If settings exist, but framework doesn't - try and recreate how settings could look? Maybe all text fields?
+If settings and framework dont exist - F, inform user and exit settings.
+
+
+
+#------------------
