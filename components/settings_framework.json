@@ -1,0 +1,7 @@
+{
+	"test_1": ["radio", "Test, radio: ", 0],
+	"_test_1": [ ["test_1", "test 1"], ["test_2", "test 2"], ["test_3", "test 3"] ],
+	"test_2": ["check", "Test, check: ", 0],
+	"test_3": ["combo", "Test, combo: ", 0],
+	"_test_3": [ ["test_1", "test 1"], ["test_2", "test 2"], ["test_3", "test 3"] ]
+}
