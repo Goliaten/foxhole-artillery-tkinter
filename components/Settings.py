@@ -12,11 +12,15 @@ def sign():
         return "\\"
 
 def dprint(text, nl=True):
-    if(debug):
+    if debug:
         if nl:
             print("\r\n", text)
             return
         print(text)
+
+def dinput(text=""):
+    if debug:
+        input(text)
 
 sgn = sign()
 debug = True
@@ -33,22 +37,16 @@ class Settings:
         self.root = root
         self.created = False
         self.allowed_widgets = ["radio", "check", "combo"]
+        self.widgets = {}
+        self.settings_count = 0
         
-        #------------------------------------------------------------
-        #have predefined structure or load structure from file for settings?
-        #prob have it predefined with default variables, and overwrite them with settings, to prevent any missing
-        #but then again, predefined in here, or in separate file?
-        #in separate file easier for management, here more "secure"
-        #take separate file approach
-        #plus you can put there types of fields for each setting, and have them taken to different variable
-        
-        self.startup()
      
     def create(self):
         
         dlg = Toplevel(self.root)
         self.dlg = dlg
         self.frame = ttk.Frame(self.dlg)
+        self.frame.grid(column=0, row=0)
         
         dlg.title("Settings")
         dlg.geometry("200x200")
@@ -57,6 +55,8 @@ class Settings:
         dlg.attributes("-topmost", 1)
         
         self.created = True
+        
+        self.startup()
     
     def destroy(self):
         try:
@@ -65,18 +65,6 @@ class Settings:
             self.created = False
         except Exception as e:
             print(e)
-    
-    def add_field(self, widg_type, name, caption):
-        
-        if widg_type not in self.allowed_widgets:
-            print(f"Err - {widg_type} not in allowed widgets. {name} {caption}")
-            return
-        
-        if self.created:
-            if widg_type == "radio":
-                pass #--------------------------------------------------------
-            else:
-                print("not implemented yet")
     
     def startup(self):
         framework = {}
@@ -98,23 +86,27 @@ class Settings:
             dprint("Loading settings")
             settings = self.load_settings()
         else:
-            dprint("settings not present")
+            dprint("Creating settings")
             settings = self.create_settings(framework)
             
         dprint(settings)
-            
-        input("now we wait")
-            
+        
+        if framework:
+            dprint("Creating widgets")
+            self.create_widgets(framework)
+        else:
+            dprint("Can't create settings with no framework")
+            pass
+        
+        self.add_footer()
+        
+        dinput("now we wait")
     
     def load_settings(self):
         
         with open(self.settings, "r") as file:
             return json.loads(file.read())
-        
     
-    def save_settings(self):
-        pass
-        
     def load_framework(self):
     
         with open(f"components{sgn}{self.settings_framework}", 'r') as file:
@@ -128,7 +120,11 @@ class Settings:
             
             #dprint(f"{f_key}, {f_entry}", False)
             
-            if f_entry[0] == "radio":
+            if f_key[0] == "_":
+                #skippings item settings, as they are directly accessed by their refferenced settings
+                continue
+                
+            elif f_entry[0] == "radio":
                 # from framework we take the item setting, get the correct item, and take the value of it
                 settings[f_key] = framework[f"_{f_key}"] [f_entry[2]] [0]
                 
@@ -137,10 +133,6 @@ class Settings:
                 
             elif f_entry[0] == "combo":
                 settings[f_key] = framework[f"_{f_key}"] [f_entry[2]] [0]
-                
-            elif f_key[0] == "_":
-                #skippings item settings, as they are directly accessed by their refferenced settings
-                continue
                 
             else:
                 dprint("unknown setting type: " + f_key)
@@ -153,7 +145,91 @@ class Settings:
             
         return settings
         
-    def create_widgets(self):
+    def create_widgets(self, framework):
+        
+        for f_key, f_entry in framework.items():
+            
+            #dprint(f_key, f_entry)
+            
+            if f_key[0] == "_":
+                continue
+            
+            elif f_entry[0] == "radio":
+                self.add_field("radio", f_key, f_entry[1], f_entry[2], framework[f"_{f_key}"])
+                
+            elif f_entry[0] == "check":
+                self.add_field("check", f_key, f_entry[1], f_entry[2])
+                
+            elif f_entry[0] == "combo":
+                self.add_field("combo", f_key, f_entry[1], f_entry[2], framework[f"_{f_key}"])
+                
+            else:
+                dprint("unknown setting type: " + f_key)
+                pass
+        #dprint( f'string_vars: {[(x[0], x[1].get()) for x in self.string_vars.items()]}' )
+    
+    def add_field(self, widg_type, name, caption, default, items=[]):
+        
+        dprint(f"{widg_type}, {name}, {caption}, {items}")
+        
+        
+        # for now, handling grid will be separate
+        self.frame.rowconfigure(self.settings_count, weight=1)
+        subframe = ttk.Frame(self.frame)
+        subframe.grid(column=0, row=self.settings_count, sticky=(W))
+        subframe.columnconfigure(0, weight=1)
+        subframe.columnconfigure(1, weight=1)
+        
+        if widg_type not in self.allowed_widgets:
+            print(f"Err - {widg_type} not in allowed widgets. {name} {caption}")
+            return
+        
+        if self.created:
+            if widg_type == "check":
+            
+                var = StringVar()
+                var.set(default)
+                self.string_vars[name] = var
+                
+                ttk.Label(subframe, text=caption).grid(column=0, row=0)
+                ttk.Checkbutton(subframe, variable=var).grid(column=1, row=0)
+                
+            elif widg_type == "combo":
+                
+                var = StringVar()
+                var.set(items[default][1])
+                self.string_vars[name] = var
+                
+                ttk.Label(subframe, text=caption).grid(column=0, row=0)
+                widget = ttk.Combobox(subframe, textvariable=var)
+                widget.grid(column=1, row=0)
+                widget['values'] = [x[1] for x in items] #this will hold the text part of items, during saving and loading, we will exchange text for setting value
+                widget.state(['readonly'])
+                widget.bind('<<ComboboxSelected>>', self.combobox_clear)
+                
+            elif widg_type == "radio":
+            
+                var = StringVar()
+                var.set(items[default][1])
+                self.string_vars[name] = var
+                
+                label_frame = ttk.Labelframe(subframe, text=caption)
+                label_frame.grid(column=0, row=0)
+                for y, x in enumerate(items):
+                    label_frame.rowconfigure(y, weight=1)
+                    ttk.Radiobutton(label_frame, text=x[1], variable=name, value=x[0]).grid(column=1, row=y)
+            
+            else:
+                print("not implemented")
+                return
+        
+        self.settings_count += 1
+    
+    def add_footer(self):
+        # add save, cancel buttons, and bind their click event to functions. save to save_settings and quit, cancel to quit
+        pass
+    
+    def save_settings(self):
         pass
     
     def exit_cancel(self):
@@ -161,6 +237,9 @@ class Settings:
     
     def exit_save(self):
         pass
+        
+    def combobox_clear(self, event):
+        event.widget.selection_clear()
     
     
     
