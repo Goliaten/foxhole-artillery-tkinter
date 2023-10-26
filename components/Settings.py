@@ -26,20 +26,21 @@ sgn = sign()
 debug = True
 
 class Settings:
+
     def __init__(self, root):
         
         # https://tkdocs.com/tutorial/windows.html#wm
         
-        self.settings_framework = "settings_framework.json"
-        self.settings = "settings.json"
+        self.settings_framework_filename = "settings_framework.json"
+        self.settings_filename = "settings.json"
         
+        self.settings = {}
+        self.framework = {}
         self.string_vars = {}
         self.root = root
         self.created = False
         self.allowed_widgets = ["radio", "check", "combo"]
-        self.widgets = {}
         self.settings_count = 0
-        
      
     def create(self):
         
@@ -70,8 +71,9 @@ class Settings:
         framework = {}
         settings = {}
         
-        # if settings file exists
-        if os.path.isfile(f"components{sgn}{self.settings_framework}"):
+        
+        # load framework if exists
+        if os.path.isfile(f"components{sgn}{self.settings_framework_filename}"):
             dprint("Loading framework")
             framework = self.load_framework()
         else:
@@ -80,17 +82,23 @@ class Settings:
             #i dont wanna do large if blocks
             pass
         
-        print(framework)
+        #------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
-        if os.path.isfile(f"{self.settings}"):
+        #      Hold on, we load settings, but we dont know, if they didnt change, or are correct in terms of keys - values. Need to validate 
+        #      check if we can add save settings not present
+        #      check if we can throw out settings not needed
+        
+        #------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        #load settings if exist, else make them
+        if os.path.isfile(f"{self.settings_filename}"):
             dprint("Loading settings")
             settings = self.load_settings()
         else:
             dprint("Creating settings")
             settings = self.create_settings(framework)
-            
-        dprint(settings)
         
+        #create widgets if framework is loaded
         if framework:
             dprint("Creating widgets")
             self.create_widgets(framework)
@@ -100,16 +108,18 @@ class Settings:
         
         self.add_footer()
         
-        dinput("now we wait")
+        self.settings = settings
+        self.framework = framework
+        #dinput("now we wait")
     
     def load_settings(self):
         
-        with open(self.settings, "r") as file:
+        with open(self.settings_filename, "r") as file:
             return json.loads(file.read())
     
     def load_framework(self):
     
-        with open(f"components{sgn}{self.settings_framework}", 'r') as file:
+        with open(f"components{sgn}{self.settings_framework_filename}", 'r') as file:
             return json.loads(file.read())
     
     def create_settings(self, framework):
@@ -140,7 +150,7 @@ class Settings:
                 
         #dprint(settings, False)
         
-        with open(self.settings, "w") as file:
+        with open(self.settings_filename, "w") as file:
             file.write( json.dumps(settings, indent=4) )
             
         return settings
@@ -227,16 +237,34 @@ class Settings:
     
     def add_footer(self):
         # add save, cancel buttons, and bind their click event to functions. save to save_settings and quit, cancel to quit
-        pass
+        
+        
+        self.frame.rowconfigure(self.settings_count, weight=1) # this is the last row, so no need to increment settings_count
+        subframe = ttk.Frame(self.frame)
+        subframe.grid(column=0, row=self.settings_count)
+        subframe.columnconfigure(0, weight=1)
+        subframe.columnconfigure(1, weight=1)
+        
+        save = ttk.Button(subframe, text="save", command=self.click_save)
+        save.grid(column=0, row=0, sticky=[E])
+        
+        cancel = ttk.Button(subframe, text="exit", command=self.click_exit)
+        cancel.grid(column=1, row=0, sticky=[W])
     
     def save_settings(self):
-        pass
+        
+        with open(self.settings_filename, "w") as file:
+            file.write( json.dumps(self.settings, indent=4) )
+            
     
-    def exit_cancel(self):
-        pass
+    def click_save(self, *event):
     
-    def exit_save(self):
-        pass
+        self.save_settings()
+        print("exit save")
+    
+    def click_exit(self, *event):
+        self.destroy()
+        print("exit cancel")
         
     def combobox_clear(self, event):
         event.widget.selection_clear()
