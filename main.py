@@ -14,6 +14,7 @@ from components.Settings import Settings
 # make it so after every Enter clicked, the focus goes to next Entry
 # options/settings
 # - digits to round in Calculator.calculate - int
+# - test how settings act after closing and reopening. Prevent multiple loadings of framework and settings.
 # map
 # connection to foxhole api
 # compile script to exe
@@ -27,7 +28,7 @@ def callback(P):
         return False
 
 class Main:
-    def __init__(self, parent):
+    def __init__(self, parent, settings):
         frame = ttk.Frame(parent)
         frame.grid(column=0, row=0, sticky=(N, W, E, S))
         frame.columnconfigure(10, weight=4)
@@ -38,19 +39,10 @@ class Main:
         frame.rowconfigure(30, weight=9)
         self.frame = frame
         
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=10, row=10, sticky=(N, W, E, S))
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=10, row=20, sticky=(N, W, E, S))
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=10, row=30, sticky=(N, W, E, S))
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=20, row=10, sticky=(N, W, E, S))
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=20, row=20, sticky=(N, W, E, S))
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=20, row=30, sticky=(N, W, E, S))
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=30, row=10, sticky=(N, W, E, S))
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=30, row=20, sticky=(N, W, E, S))
-        #ttk.Label(frame, text="test", borderwidth=2, relief="raised").grid(column=30, row=30, sticky=(N, W, E, S))
         
         self.calculator = Calculator(frame, 10, 30, vcmd, artillery_types)
         self.map = Map(frame)
-        #self.settings = Settings(frame)
+        self.settings = settings
     
     def startup(self):
         
@@ -70,9 +62,17 @@ class Main:
         image = PhotoImage(file=image_name)
         image = image.subsample(12) # https://stackoverflow.com/questions/6582387/image-resize-under-photoimage
         
+        
         image_label = ttk.Label(frame, image=image)
         image_label.image = image
         image_label.grid(column=column, row=row, sticky=(N,W,E,S))
+        image_label.bind('<Button-1>', self.settings_click)
+    
+    def settings_click(self, event):
+        print('a', root.winfo_geometry())
+        print('b', self.frame.winfo_geometry())
+        self.settings.create()
+        # maybe disable all input for this window once settings open
 
 root = Tk()
 root.title("Artillery calculator")
@@ -107,7 +107,9 @@ mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
 mainframe.columnconfigure(0, weight=1)
 mainframe.rowconfigure(0, weight=1)
 
-main = Main(mainframe)
+settings = Settings(root)
+
+main = Main(mainframe, settings)
 main.startup()
 
 #initialising components
