@@ -2,7 +2,10 @@ from tkinter import *
 from tkinter import ttk
 
 class Map:
-    def __init__(self, parent):
+    def __init__(self, parent, settings_class):
+        
+        self.settings_class = settings_class
+        self.test_settings()
         
         return
         
@@ -29,3 +32,8 @@ class Map:
         
         test.grid(column=0, row=0)
         image_label.grid(column=0, row=1, sticky="NSEW")
+        
+        
+    def test_settings(self):
+        print("Looking at settings from Map module")
+        print(self.settings_class.load_settings_ext())
