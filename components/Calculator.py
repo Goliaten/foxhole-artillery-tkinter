@@ -20,7 +20,10 @@ def get_wind_offset(string_var, artillery_types):
         return 0
 
 class Calculator:
-    def __init__(self, parent, column, row, validator, artillery_types):
+    def __init__(self, parent, settings_class, column, row, validator, artillery_types):
+        
+        self.settings_class = settings_class
+        self.test_settings()
         
         #creating string vars
         self.azim_var = StringVar()
@@ -100,3 +103,8 @@ class Calculator:
         
     def get_var():
         pass
+        
+    def test_settings(self):
+        print("Looking at settings from Calculator module")
+        print(self.settings_class.load_settings_ext())
+        

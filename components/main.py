@@ -40,16 +40,15 @@ class Main:
         self.frame = frame
         
         
-        self.calculator = Calculator(frame, 10, 30, vcmd, artillery_types)
-        self.map = Map(frame)
         self.settings = settings
+        self.calculator = Calculator(frame, self.settings, 10, 30, vcmd, artillery_types)
+        self.map = Map(frame, self.settings)
     
     def startup(self):
         
         self.calculator.create()
         self.create_title(self.frame, title="artillery calculator")
         self.create_settings_icon(self.frame)
-        #self.settings.create()
         
     def create_title(self, frame, column=10, row=10, title="",):
         title = ttk.Label(frame, text=title)

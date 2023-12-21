@@ -43,12 +43,11 @@ class Settings:
         self.settings_count = 0
         self.pop_offset_x = 20
         self.pop_offset_y = 20
-        self.settings_file_verified = False
      
     def create(self):
         
         dlg = Toplevel(self.root)
-        dlg.protocol("WM_DELETE_WINDOW", self.destroy) # catch the close button
+        dlg.protocol("WM_DELETE_WINDOW", self.destroy()) # catch the close button
         dlg.resizable(FALSE, FALSE) # disable resize
         dlg.lift(self.root) # elevating window above rooot
         print( 'c',  self.root.winfo_geometry() )
@@ -76,26 +75,16 @@ class Settings:
             self.dlg.destroy()
             self.created = False
         except Exception as e:
-            print('Settings.destroy exception')
             print(e)
     
     def startup(self):
-        framework, settings = self.verify_settings_file()
-        
-        self.add_footer()
-        
-        self.settings = settings
-        self.framework = framework
-    
-    def verify_settings_file(self, internal=True):
-        # disabling internal flag causes settings to not create widgets
         framework = {}
         settings = {}
         
-        dprint("verifying settings")
+        
         # load framework if exists
         if os.path.isfile(f"components{sgn}{self.settings_framework_filename}"):
-            dprint("Loading framework")
+            #dprint("Loading framework")
             framework = self.load_framework()
         else:
             dprint("Framework not present")
@@ -113,36 +102,29 @@ class Settings:
 
         #load settings if exist, else make them
         if os.path.isfile(f"{self.settings_filename}"):
-            dprint("Loading settings")
+            #dprint("Loading settings")
             settings = self.load_settings()
         else:
             dprint("Creating settings")
             settings = self.create_settings(framework)
         
-        if internal:
-            #create widgets if framework is loaded
-            if framework:
-                dprint("Creating widgets")
-                self.create_widgets(framework, settings)
-            else:
-                dprint("Can't create settings with no framework")
+        #create widgets if framework is loaded
+        if framework:
+            #dprint("Creating widgets")
+            self.create_widgets(framework, settings)
+        else:
+            dprint("Can't create settings with no framework")
+            pass
         
-        dprint("settings verification complete")
+        self.add_footer()
         
-        return framework, settings
+        self.settings = settings
+        self.framework = framework
     
     def load_settings(self):
         
         with open(self.settings_filename, "r") as file:
             return json.loads(file.read())
-    
-    def load_settings_ext(self):
-        if not self.settings_file_verified:
-            self.settings_file_verified = True
-            return self.verify_settings_file(False)[1]
-        else:
-            return self.load_settings()
-        
     
     def load_framework(self):
     
@@ -190,7 +172,7 @@ class Settings:
                 if f_key in settings.keys():
                 
                     item_key_list = [x[0] for x in framework[f"_{f_key}"]]
-                    dprint(f"- {f_entry[0]=} {f_key=} {settings[f_key]=}  {item_key_list=}")
+                    print(f"- {settings[f_key]=}  {item_key_list=}")
                     
                     if settings[f_key] in item_key_list:
                     
@@ -207,7 +189,6 @@ class Settings:
                 
             elif f_entry[0] == "check":
                 if f_key in settings.keys():
-                    dprint(f"- {f_entry[0]=} {f_key=} {settings[f_key]=}")
                     self.add_field("check", f_key, f_entry[1], settings[f_key])
                 else:
                     self.add_field("check", f_key, f_entry[1], f_entry[2])
@@ -217,7 +198,7 @@ class Settings:
                 if f_key in settings.keys():
                 
                     item_key_list = framework[f"_{f_key}"]
-                    dprint(f"- {f_entry[0]=} {f_key=} {settings[f_key]=}  {item_key_list=}")
+                    print(f"- {settings[f_key]=}  {item_key_list=}")
                     
                     if settings[f_key] in item_key_list:
                     
@@ -236,7 +217,7 @@ class Settings:
     
     def add_field(self, widg_type, name, caption, default, items=[]):
         
-        #dprint(f"{widg_type}, {name}, {caption}, {default}, {items}")
+        dprint(f"{widg_type}, {name}, {caption}, {default}, {items}")
         
         
         # for now, handling grid will be separate
